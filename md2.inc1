@@ -1,0 +1,17 @@
+
+        ! external variables
+        double precision      :: pos(3,totnum), pot
+        double precision      :: fx(totnum), fy(totnum), fz(totnum) 
+        double precision      :: velo(3,totnum) !, vy(totnum), vz(totnum) 
+            
+        ! internal variables
+        double precision   :: pos0(3,totnum)
+        double precision   :: velo0(3,totnum)   !,  vy0(totnum), vz0(totnum) 
+        double precision   ::  msd       ! mean square displacement
+        double precision   ::  vcf       ! Velocity Coorelation Function 
+        double precision   ::  diffco    ! diffusion coefficience  
+        double precision   ::  hdt       ! half dt, for calc. effi
+        integer            ::  i, j, k   ! loop index
+        integer   ::  flag1
+        double precision   :: t_refer
+
