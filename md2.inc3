@@ -1,0 +1,9 @@
+        end do ! while (ctime < tott ) 
+
+        ! print diffusion coefficence on the screen
+        diffco = diffco*dt/3.0d0   
+        write(*,*) "Diffusion Coeff from VCF" , diffco/diffco2reduceddiffco 
+        write(*,*) "Diffusion Coeff reduced unit" , diffco
+
+        call md_files('close')
+
