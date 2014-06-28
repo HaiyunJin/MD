@@ -1,0 +1,82 @@
+
+
+write(*,*) "In md"
+        
+        ! store the pos and v at t = 0
+        pos0 = pos
+        velo0  = velo 
+        diffco = 0.0d0
+        t_refer = 0.5d0
+
+        call md_files('open')
+
+            ! 0. initialize, done in initpos() and initvelo()
+            !  calculate and print energy for initial state
+                !Ek
+                Ek = 0.0d0
+                Ep = 0.0d0
+                do i = 1 , totnum
+                     Ek = Ek + (velo(1,i)**2 + velo(2,i)**2 + velo(3,i)**2)
+                end do
+                Ek = Ek * 0.5d0
+                Ep = pot
+                Etot = Ek + Ep
+                call md_files('we')
+
+            ! 1. compute a, same as f
+        ctime = dt
+        hdt = dt*0.5d0
+        flag1 = 1    ! flag for store pos0
+
+        do while (ctime < tott ) 
+            ! sample msd vcf
+            if (ctime .ge. t_refer) then   !  set t @ 0.8 as the reference point
+                call sample_msd_vcf(pos,velo,pos0, velo0, &
+                                 diffco,vcf, msd, flag1, ctime)
+            end if
+        ! 2. compute v(t+dt/2)
+              do i = 1 , totnum
+                  velo(1,i) = velo(1,i) + hdt*fx(i)
+                  velo(2,i) = velo(2,i) + hdt*fy(i)
+                  velo(3,i) = velo(3,i) + hdt*fz(i)
+              end do 
+            ! 3. update pos 
+              do i = 1 , totnum
+                   pos(:,i) = pos(:,i) + velo(:,i)*dt
+!                   pos(2,i) = pos(2,i) + velo(2,i)*dt
+!                   pos(3,i) = pos(3,i) + velo(3,i)*dt
+                     ! chenk PBC 
+                  ! if (PBC .EQ. 1) then
+                    call pbc_(pos(1,i), lx, 1)  ! in common.f90
+                    call pbc_(pos(2,i), ly, 1)  ! in common.f90
+                    call pbc_(pos(3,i), lz, 1)  ! in common.f90
+                  ! end if 
+              end do 
+                
+            ! 4. update f and pot  using pos
+                call  LJPE(pos,pot,fx,fy,fz)   ! in LJPE.f90
+
+            ! 5. update v
+            do i = 1 , totnum
+                velo(1,i) = velo(1,i) + hdt*fx(i)
+                velo(2,i) = velo(2,i) + hdt*fy(i)
+                velo(3,i) = velo(3,i) + hdt*fz(i)
+            end do 
+                
+            ! 6. calculate and print energy
+                Ek = 0.0d0
+                Ep = 0.0d0
+                do i = 1 , totnum
+                     Ek = Ek + (velo(1,i)**2 + velo(2,i)**2 + velo(3,i)**2)
+                end do
+                Ek = Ek*0.5d0
+                Ep = pot
+
+                Etot = Ek + Ep
+
+                !calc temperature
+                call md_files('we')
+
+            ! 7. go to next step
+            ctime = ctime + dt
+
